@@ -26,7 +26,7 @@ const NEET = () => {
       }
 
       const itemsSnapshot = await getDocs(itemsQuery);
-      const items = itemsSnapshot.docs.map((doc) => ({
+      const items = itemsSnapshot.docs.map((doc) => ({ 
         id: doc.id,
         ...doc.data(),
       }));
@@ -122,7 +122,7 @@ const NEET = () => {
           </motion.div>
         ))}
         {!loading && !allItemsLoaded && (
-          <LoadMore onLoadMore={handleLoadMore} loadingMore={loadingMore} />
+          <LoadMore onInView={handleLoadMore} loadingMore={loadingMore} />
         )}
         {loading &&
           Array.from({ length: 8 }).map((_, index) => (
