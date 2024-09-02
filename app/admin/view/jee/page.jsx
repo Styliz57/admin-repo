@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { getFirestore, collection, getDocs, query, limit, startAfter, deleteDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, limit, startAfter, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { app } from '@/firebase';
 import PdfCard from '@/app/_components/PdfCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,6 +67,29 @@ const IIT = () => {
     }
   };
 
+  const handleEdit = async (id, updatedData) => {
+    try {
+      const db = getFirestore(app);
+      const itemRef = doc(db, 'jee', id);
+      await updateDoc(itemRef, {
+        folderName: updatedData.folderName,
+        folderYear: updatedData.folderYear,
+        selectedCourse: updatedData.selectedCourse,
+        selectedInstitution: updatedData.selectedInstitution,
+        tags: updatedData.tags,
+        uploadedFiles: updatedData.uploadedFiles,
+      });
+
+      setFirebaseItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === id ? { ...item, ...updatedData } : item
+        )
+      );
+    } catch (error) {
+      console.error('Error editing item:', error);
+    }
+  };
+
   const handleLoadMore = useCallback(async () => {
     if (lastDoc) {
       setLoadingMore(true);
@@ -86,39 +109,26 @@ const IIT = () => {
             transition={{ delay: index * 0.1, duration: 0.5 }}
           >
             <PdfCard
-              id={item.id} 
+              id={item.id}
               title={item.folderName}
               year={item.folderYear}
               course={item.selectedCourse}
               institution={item.selectedInstitution}
               tags={item.tags}
+              uploadedFiles={item.uploadedFiles || []}
               onDelete={handleDelete}
+              onEdit={handleEdit}
             />
           </motion.div>
         ))}
-
+        {!loading && !allItemsLoaded && (
+          <LoadMore onLoadMore={handleLoadMore} loadingMore={loadingMore} />
+        )}
         {loading &&
-          Array.from({ length: itemLimit }).map((_, index) => (
-            <div key={index} className="flex flex-col space-y-3">
-              <Skeleton className="w-[24em] md:w-[20em] h-[13em] rounded-xl" />
-            </div>
+          Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton key={index} className="w-[23em] h-[12.5em] rounded-lg" />
           ))}
       </div>
-
-      {!loading && !allItemsLoaded && (
-        <LoadMore onInView={handleLoadMore} />
-      )}
-      {loadingMore && (
-        <div className="flex justify-center mt-4">
-          <Skeleton className="w-[3em] h-[3em] rounded-full" />
-        </div>
-      )}
-
-      {allItemsLoaded && (
-        <div className="flex justify-center p-4">
-          <p className="text-gray-500">That's It !</p>
-        </div>
-      )}
     </div>
   );
 };
